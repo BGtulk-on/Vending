@@ -10,8 +10,14 @@ public class CashRegister {
     }
 
     public void refillCash() {
-        b20 = 20; b10 = 20; b5 = 20;
-        c200 = 20; c100 = 20; c50 = 20; c20 = 20; c10 = 20;
+        b20 += 20;
+        b10 += 20;
+        b5 += 20;
+        c200 += 20;
+        c100 += 20;
+        c50 += 20;
+        c20 += 20;
+        c10 += 20;
         save();
     }
 

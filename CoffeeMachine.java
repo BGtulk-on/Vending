@@ -37,7 +37,7 @@ public class CoffeeMachine {
             double inserted = 0;
             while (inserted < d.getPrice()) {
                 System.out.printf("Price: %.2f euro | Inserted: %.2f euro | Needed: %.2f euro\n", 
-                                  d.getPrice(), inserted, (d.getPrice() - inserted));
+                                    d.getPrice(), inserted, (d.getPrice() - inserted));
                 System.out.print("Insert: ");
                 double coin = sc.nextDouble();
 
