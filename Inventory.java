@@ -1,57 +1,69 @@
+import java.io.*;
+import java.util.Scanner;
+
 public class Inventory {
-    int waterStock = 1000;   // ml
-    int coffeeStock = 500;   // g
-    int milkStock = 500;     // ml
-    int sugarStock = 100;    // пакета по 1 лъжичка
-    int cupsStock = 50;
+    private int water, coffee, milk, sugar, cups;
+    private final String FILE_NAME = "inventory_data.txt";
 
-    public boolean hasEnoughWater(int amount) { 
-        return waterStock >= amount; 
+    public Inventory() {
+        if (!load()) refillAll();
     }
 
-    public boolean hasEnoughCoffee(int amount) { 
-        return coffeeStock >= amount; 
+    private boolean load() {
+        File f = new File(FILE_NAME);
+        if (!f.exists()) 
+            return false;
+        try (Scanner sc = new Scanner(f)) {
+            water = sc.nextInt();
+            coffee = sc.nextInt();
+            milk = sc.nextInt();
+            sugar = sc.nextInt();
+            cups = sc.nextInt();
+            return true;
+        } catch (Exception e) { 
+            return false; 
+        }
     }
 
-    public boolean hasEnoughMilk(int amount) {
-        return milkStock >= amount; 
+    public void save() {
+        try (PrintWriter out = new PrintWriter(new FileWriter(FILE_NAME))) {
+            out.println(water);
+            out.println(coffee);
+            out.println(milk);
+            out.println(sugar);
+            out.println(cups);
+        } catch (IOException e) {}
     }
 
-    public boolean hasEnoughSugar(int amount) { 
-        return sugarStock >= amount; 
+    public boolean hasEnough(Drink d, int extraSugar, int extraMilk) {
+        if (water < d.getWaterAmount()) 
+            return false;
+        if (coffee < d.getCoffeeAmount()) 
+            return false;
+        if (sugar < (d.getBaseSugar() + extraSugar)) 
+            return false;
+        if (milk < (d.getBaseMilk() + extraMilk)) 
+            return false;
+        if (cups <= 0) 
+            return false;
+        return true;
     }
 
-    public boolean hasEnoughCups() { 
-        return cupsStock > 0; 
-    }
-
-/*=======================================================*/
-
-    public void useWater(int amount) { 
-        waterStock -= amount; 
-    }
-
-    public void useCoffee(int amount) { 
-        coffeeStock -= amount; 
-    }
-
-    public void useMilk(int amount) { 
-        milkStock -= amount; 
-    }
-
-    public void useSugar(int amount) { 
-        sugarStock -= amount; 
-    }
-
-    public void useCup() { 
-        cupsStock -= 1; 
+    public void use(Drink d, int extraSugar, int extraMilk) {
+        water -= d.getWaterAmount();
+        coffee -= d.getCoffeeAmount();
+        sugar -= (d.getBaseSugar() + extraSugar);
+        milk -= (d.getBaseMilk() + extraMilk);
+        cups--;
+        save(); 
     }
 
     public void refillAll() {
-        waterStock = 1000;
-        coffeeStock = 500;
-        milkStock = 500;
-        sugarStock = 100;
-        cupsStock = 50;
+        water = 1000; 
+        coffee = 500; 
+        milk = 500; 
+        sugar = 100; 
+        cups = 50;
+        save();
     }
 }

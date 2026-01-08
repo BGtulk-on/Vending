@@ -6,17 +6,15 @@ class Menu {
     };
 
     public static void printMenu() {
-        System.out.println("Choose a drink:");
+        System.out.println("\n===== COFFEE MENU =====");
         for (int i = 0; i < drinks.length; i++) {
-            System.out.println((i + 1) + ". " + drinks[i].getName() + " (" + drinks[i].getPrice() + " euro)");
+            System.out.printf("%d. %-12s | %.2f euro\n", (i+1), drinks[i].getName(), drinks[i].getPrice());
         }
     }
 
     public static Drink getDrink(int choice) {
-        if (choice >= 1 && choice <= drinks.length) {
+        if (choice >= 1 && choice <= drinks.length) 
             return drinks[choice - 1];
-        } else {
-            return null;
-        }
+        return null;
     }
 }

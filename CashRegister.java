@@ -1,102 +1,131 @@
+import java.io.*;
+import java.util.Scanner;
+
 public class CashRegister {
-    private int count1euro;
-    private int count2euro;
-    private int count5euro;
-    private int count10euro;
-    private int count20euro;
-    private int count50euro;
-    private int countCoins50;
-    private int countCoins20;
-    private int countCoins10;
-    private double totalBalance; 
+    private int b20, b10, b5, c200, c100, c50, c20, c10; 
+    private final String FILE_NAME = "cash_data.txt";
 
     public CashRegister() {
-        this.count1euro = 10;
-        this.count2euro = 10;
-        this.count5euro = 10;
-        this.count10euro = 10;
-        this.count20euro = 10;
-        this.count50euro = 0;
-        this.countCoins50 = 0;
-        this.countCoins20 = 0;
-        this.countCoins10 = 4;
-        this.totalBalance = 194.40; 
+        if (!load()) refillCash();
+    }
+
+    public void refillCash() {
+        b20 = 20; b10 = 20; b5 = 20;
+        c200 = 20; c100 = 20; c50 = 20; c20 = 20; c10 = 20;
+        save();
+    }
+
+    public void save() {
+        try (PrintWriter out = new PrintWriter(new FileWriter(FILE_NAME))) {
+            out.println(b20 + "," + b10 + "," + b5 + "," + c200 + "," + c100 + "," + c50 + "," + c20 + "," + c10);
+        } catch (IOException e) { }
+    }
+
+    private boolean load() {
+        File f = new File(FILE_NAME);
+        if (!f.exists()) return false;
+        try (Scanner sc = new Scanner(f)) {
+            String[] p = sc.nextLine().split(",");
+            b20 = Integer.parseInt(p[0]); 
+            b10 = Integer.parseInt(p[1]); 
+            b5 = Integer.parseInt(p[2]);
+            c200 = Integer.parseInt(p[3]); 
+            c100 = Integer.parseInt(p[4]); 
+            c50 = Integer.parseInt(p[5]); 
+            c20 = Integer.parseInt(p[6]); 
+            c10 = Integer.parseInt(p[7]);
+            return true;
+        } catch (Exception e) { return false; }
+    }
+
+    public boolean isValid(double amount) {
+        return amount == 20.0 || amount == 10.0 || amount == 5.0 || 
+               amount == 2.0 || amount == 1.0 || amount == 0.5 || amount == 0.2 || amount == 0.1;
     }
 
     public void addMoney(double amount) {
-        double epsilon = 0.001;      
-
-        if (Math.abs(amount - 50.0) < epsilon) {
-            count50euro++;
-        } else if (Math.abs(amount - 20.0) < epsilon) {
-            count20euro++;
-        } else if (Math.abs(amount - 10.0) < epsilon) {
-            count10euro++;
-        } else if (Math.abs(amount - 5.0) < epsilon) {
-            count5euro++;
-        } else if (Math.abs(amount - 2.0) < epsilon) {
-            count2euro++;
-        } else if (Math.abs(amount - 1.0) < epsilon) {
-            count1euro++;
-        } else if (Math.abs(amount - 0.50) < epsilon) {
-            countCoins50++;
-        } else if (Math.abs(amount - 0.20) < epsilon) {
-            countCoins20++;
-        } else if (Math.abs(amount - 0.10) < epsilon) {
-            countCoins10++;
-        }
-
-        totalBalance += amount;
-        totalBalance = Math.round(totalBalance * 100.0) / 100.0;
+        if (amount == 20.0) b20++; 
+        else if (amount == 10.0) b10++;
+        else if (amount == 5.0) b5++; 
+        else if (amount == 2.0) c200++;
+        else if (amount == 1.0) c100++; 
+        else if (amount == 0.5) c50++;
+        else if (amount == 0.2) c20++; 
+        else if (amount == 0.1) c10++;
+        save();
     }
 
-    public boolean hasEnoughChange(double change) {
-        return simulateChangeReturn(change);
+    public void refundMoney(double amount) {
+        if (amount == 20.0) b20--; 
+        else if (amount == 10.0) b10--;
+        else if (amount == 5.0) b5--; 
+        else if (amount == 2.0) c200--;
+        else if (amount == 1.0) c100--; 
+        else if (amount == 0.5) c50--;
+        else if (amount == 0.2) c20--; 
+        else if (amount == 0.1) c10--;
+        save();
     }
 
-    private boolean simulateChangeReturn(double change) {
+    public boolean canGiveChange(double change) {
         int remaining = (int) Math.round(change * 100);
-        
-        int t50 = count50euro; int t20 = count20euro; int t10 = count10euro;
-        int t5 = count5euro; int t2 = count2euro; int t1 = count1euro;
-        int tc50 = countCoins50; int tc20 = countCoins20; int tc10 = countCoins10;
+        int tb20=b20, tb10=b10, tb5=b5, tc200=c200, tc100=c100, tc50=c50, tc20=c20, tc10=c10;
 
-        while (remaining >= 5000 && t50 > 0) { remaining -= 5000; t50--; }
-        while (remaining >= 2000 && t20 > 0) { remaining -= 2000; t20--; }
-        while (remaining >= 1000 && t10 > 0) { remaining -= 1000; t10--; }
-        while (remaining >= 500 && t5 > 0) { remaining -= 500; t5--; }
-        while (remaining >= 200 && t2 > 0) { remaining -= 200; t2--; }
-        while (remaining >= 100 && t1 > 0) { remaining -= 100; t1--; }
-        while (remaining >= 50 && tc50 > 0) { remaining -= 50; tc50--; }
-        while (remaining >= 20 && tc20 > 0) { remaining -= 20; tc20--; }
-        while (remaining >= 10 && tc10 > 0) { remaining -= 10; tc10--; }
+        while (remaining >= 2000 && tb20 > 0) { 
+            remaining -= 2000; tb20--; 
+        }
+        while (remaining >= 1000 && tb10 > 0) { 
+            remaining -= 1000; tb10--; 
+        }
+        while (remaining >= 500 && tb5 > 0) { 
+            remaining -= 500; tb5--; 
+        }
+        while (remaining >= 200 && tc200 > 0) { 
+            remaining -= 200; tc200--; 
+        }
+        while (remaining >= 100 && tc100 > 0) { 
+            remaining -= 100; tc100--; 
+        }
+        while (remaining >= 50 && tc50 > 0) { 
+            remaining -= 50; tc50--; 
+        }
+        while (remaining >= 20 && tc20 > 0) { 
+            remaining -= 20; tc20--; 
+        }
+        while (remaining >= 10 && tc10 > 0) { 
+            remaining -= 10; tc10--; 
+        }
+        
         return remaining == 0;
     }
 
-    public boolean returnChange(double change) {
-        if (!simulateChangeReturn(change)) {
-            System.out.println("Cannot return exact change! cancel.");
-            return false;
-        }
-
+    public void returnChange(double change) {
         int remaining = (int) Math.round(change * 100);
-
-        while (remaining >= 5000 && count50euro > 0) { remaining -= 5000; count50euro--; }
-        while (remaining >= 2000 && count20euro > 0) { remaining -= 2000; count20euro--; }
-        while (remaining >= 1000 && count10euro > 0) { remaining -= 1000; count10euro--; }
-        while (remaining >= 500 && count5euro > 0) { remaining -= 500; count5euro--; }
-        while (remaining >= 200 && count2euro > 0) { remaining -= 200; count2euro--; }
-        while (remaining >= 100 && count1euro > 0) { remaining -= 100; count1euro--; }
-        while (remaining >= 50 && countCoins50 > 0) { remaining -= 50; countCoins50--; }
-        while (remaining >= 20 && countCoins20 > 0) { remaining -= 20; countCoins20--; }
-        while (remaining >= 10 && countCoins10 > 0) { remaining -= 10; countCoins10--; }
-
-        totalBalance -= change;
-        totalBalance = Math.round(totalBalance * 100.0) / 100.0;
-
-        System.out.println("Change returned: " + String.format("%.2f", change) + " euro.");
-        return true;
+        System.out.println("\n--- DISPENSING CHANGE ---");
+        while (remaining >= 2000 && b20 > 0) { 
+            remaining -= 2000; b20--; System.out.println("20.00 euro x 1"); 
+        }
+        while (remaining >= 1000 && b10 > 0) { 
+            remaining -= 1000; b10--; System.out.println("10.00 euro x 1"); 
+        }
+        while (remaining >= 500 && b5 > 0) { 
+            remaining -= 500; b5--; System.out.println("5.00 euro x 1"); 
+        }
+        while (remaining >= 200 && c200 > 0) { 
+            remaining -= 200; c200--; System.out.println("2.00 euro x 1"); 
+        }
+        while (remaining >= 100 && c100 > 0) { 
+            remaining -= 100; c100--; System.out.println("1.00 euro x 1"); 
+        }
+        while (remaining >= 50 && c50 > 0) { 
+            remaining -= 50; c50--; System.out.println("0.50 euro x 1"); 
+        }
+        while (remaining >= 20 && c20 > 0) { 
+            remaining -= 20; c20--; System.out.println("0.20 euro x 1"); 
+        }
+        while (remaining >= 10 && c10 > 0) { 
+            remaining -= 10; c10--; System.out.println("0.10 euro x 1"); 
+        }
+        save();
     }
-
-    public double getTotalBalance() { return totalBalance; }
 }
