@@ -1,68 +1,63 @@
 import java.util.Scanner;
 
 public class CoffeeMachine {
-    private Inventory inv = new Inventory();
-    private CashRegister cash = new CashRegister();
-    private Scanner sc = new Scanner(System.in);
+    private Inventory inventory = new Inventory();
+    private CashRegister cashRegister = new CashRegister();
+    private Scanner inputScanner = new Scanner(System.in);
 
-    public void start() {
+    public void startTheMachine() {
         while (true) {
             Menu.printMenu();
-            System.out.print("Choice: ");
-            int choice = sc.nextInt();
+            System.out.print("Enter your choice: ");
+            int menuSelection = inputScanner.nextInt();
 
-            if (choice == 0) 
-                break;
-            if (choice == 22418) {
-                inv.refillAll(); 
-                cash.refillCash();
-                System.out.println("SYSTEM: refilled!"); 
+            if (menuSelection == 22412) break;
+            if (menuSelection == 22418) {
+                inventory.refillAll(); 
+                cashRegister.refillCash();
+                System.out.println("SYSTEM: All resources have been refilled!");
                 continue;
             }
 
-            Drink d = Menu.getDrink(choice);
-            if (d == null) { 
-                System.out.println("Invalid choice"); 
-                continue; 
-            }
-            
-            System.out.print("Sugar (0-5): "); int s = sc.nextInt();
-            System.out.print("Milk (0-3): "); int m = sc.nextInt();
-
-            if (!inv.hasEnough(d, s, m)) {
-                System.out.println("SORRY: Machine is out of stock!"); 
+            Drink drinkChoice = Menu.getDrink(menuSelection);
+            if (drinkChoice == null) {
+                System.out.println("Invalid selection.");
                 continue;
             }
 
-            double inserted = 0;
-            while (inserted < d.getPrice()) {
-                System.out.printf("Price: %.2f euro | Inserted: %.2f euro | Needed: %.2f euro\n", 
-                                    d.getPrice(), inserted, (d.getPrice() - inserted));
-                System.out.print("Insert: ");
-                double coin = sc.nextDouble();
+            System.out.print("Extra Sugar (0-5): "); int extraSugar = inputScanner.nextInt();
+            System.out.print("Extra Milk (0-3): "); int extraMilk = inputScanner.nextInt();
 
-                if (cash.isValid(coin)) {
-                    cash.addMoney(coin);
-                    inserted += coin;
+            if (!inventory.hasEnoughProducts(drinkChoice, extraSugar, extraMilk)) {
+                System.out.println("ERROR: Out of stock!");
+                continue;
+            }
+
+            double insertedMoney = 0;
+            while (insertedMoney < drinkChoice.getPrice()) {
+                System.out.printf("Price: %.2f | Inserted amount: %.2f | Remaining amount: %.2f\n", 
+                                    drinkChoice.getPrice(), insertedMoney, (drinkChoice.getPrice() - insertedMoney));
+                System.out.print("Insert money/coins: ");
+                double inputCoinValue = inputScanner.nextDouble();
+
+                if (cashRegister.isValidCoin(inputCoinValue)) {
+                    cashRegister.addMoneyToVault(inputCoinValue);
+                    insertedMoney += inputCoinValue;
                 } else {
-                    System.out.println("Rejected");
+                    System.out.println("Coin rejected.");
                 }
             }
 
-            double change = inserted - d.getPrice();
-        
-            if (change > 0 && !cash.canGiveChange(change)) {
-                System.out.println("ERROR: Not enough change");
-                cash.refundMoney(inserted);
-                continue; 
+            double change = insertedMoney - drinkChoice.getPrice();
+            if (change > 0 && !cashRegister.canGiveChange(change)) {
+                System.out.println("ERROR: No small change available. Refunding your money...");
+                cashRegister.refundMoney(insertedMoney);
+                continue;
             }
 
-            inv.use(d, s, m);
-            if (change > 0) {
-                cash.returnChange(change);
-            }
-            
-            System.out.println("SUCCESS: Enjoy your " + d.getName() + "!");
+            inventory.useProductsForDrink(drinkChoice, extraSugar, extraMilk);
+            if (change > 0) cashRegister.returnChange(change);
+            System.out.println("READY: Please take your " + drinkChoice.getName());
         }
     }
 }

@@ -1,69 +1,66 @@
 import java.io.*;
-import java.util.Scanner;
 
-public class Inventory {
-    private int water, coffee, milk, sugar, cups;
-    private final String FILE_NAME = "inventory_data.txt";
+public class Inventory implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private int[] resourcesAmounts = new int[5]; 
+    private static final String STATE_FILE = "inventory_state.dat";
+    private static final String SETTINGS_FILE = "inventory_settings.dat";
 
     public Inventory() {
-        if (!load()) refillAll();
+        if (!loadStateFile()) refillAll();
     }
 
-    private boolean load() {
-        File f = new File(FILE_NAME);
-        if (!f.exists()) 
-            return false;
-        try (Scanner sc = new Scanner(f)) {
-            water = sc.nextInt();
-            coffee = sc.nextInt();
-            milk = sc.nextInt();
-            sugar = sc.nextInt();
-            cups = sc.nextInt();
+    private boolean loadStateFile() {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(STATE_FILE))) {
+            this.resourcesAmounts = (int[]) in.readObject();
             return true;
-        } catch (Exception e) { 
-            return false; 
+        } catch (FileNotFoundException e) {
+            System.err.println("ERROR: Inventory state file not found. Starting with defaults.");
+            return false;
+        } catch (Exception e) {
+            System.err.println("ERROR: Error loading inventory: " + e.getMessage());
+            return false;
         }
     }
 
-    public void save() {
-        try (PrintWriter out = new PrintWriter(new FileWriter(FILE_NAME))) {
-            out.println(water);
-            out.println(coffee);
-            out.println(milk);
-            out.println(sugar);
-            out.println(cups);
-        } catch (IOException e) {}
+    public void saveIntoFile() {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(STATE_FILE))) {
+            out.writeObject(this.resourcesAmounts);
+        } catch (IOException e) {
+            System.err.println("Could not save inventory to file: " + e.getMessage());
+        }
     }
 
-    public boolean hasEnough(Drink d, int extraSugar, int extraMilk) {
-        if (water < d.getWaterAmount()) 
+    public void refillAll() {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(SETTINGS_FILE))) {
+            this.resourcesAmounts = (int[]) in.readObject();
+            System.out.println("SYSTEM: Inventory loaded from settings file.");
+        } catch (Exception e) {
+            System.err.println("ERROR: Settings file missing or corrupt");
+        }
+        saveIntoFile();
+    }
+
+    public boolean hasEnoughProducts(Drink currentDrink, int extraSugar, int extraMilk) {
+        if (resourcesAmounts[0] < currentDrink.getWaterAmount()) 
             return false;
-        if (coffee < d.getCoffeeAmount()) 
+        if (resourcesAmounts[1] < currentDrink.getCoffeeAmount()) 
             return false;
-        if (sugar < (d.getBaseSugar() + extraSugar)) 
+        if (resourcesAmounts[2] < (currentDrink.getBaseMilk() + extraMilk)) 
             return false;
-        if (milk < (d.getBaseMilk() + extraMilk)) 
+        if (resourcesAmounts[3] < (currentDrink.getBaseSugar() + extraSugar)) 
             return false;
-        if (cups <= 0) 
+        if (resourcesAmounts[4] < 1) 
             return false;
         return true;
     }
 
-    public void use(Drink d, int extraSugar, int extraMilk) {
-        water -= d.getWaterAmount();
-        coffee -= d.getCoffeeAmount();
-        sugar -= (d.getBaseSugar() + extraSugar);
-        milk -= (d.getBaseMilk() + extraMilk);
-        cups--;
-        save(); 
-    }
-
-    public void refillAll() {
-        water = 1000; 
-        coffee = 500; 
-        milk = 500; 
-        sugar = 100; 
-        cups = 50;
-        save();
+    public void useProductsForDrink(Drink currentDrink, int extraSugar, int extraMilk) {
+        resourcesAmounts[0] -= currentDrink.getWaterAmount();
+        resourcesAmounts[1] -= currentDrink.getCoffeeAmount();
+        resourcesAmounts[2] -= (currentDrink.getBaseMilk() + extraMilk);
+        resourcesAmounts[3] -= (currentDrink.getBaseSugar() + extraSugar);
+        resourcesAmounts[4] -= 1;
+        saveIntoFile();
     }
 }
