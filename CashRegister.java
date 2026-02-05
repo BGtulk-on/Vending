@@ -32,7 +32,7 @@ public class CashRegister implements Serializable {
     }
 
     public void refillCash() {
-        for (int i = 0; i < quantitiesPerNominal.length; i++) quantitiesPerNominal[i] = 20;
+        for (int i = 0; i < quantitiesPerNominal.length; i++) quantitiesPerNominal[i] += 20;
         saveIntoFile();
     }
 
